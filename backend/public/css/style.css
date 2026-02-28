@@ -425,3 +425,171 @@ table {
     font-size: 2.5rem;
     margin-bottom: 10px;
 }
+
+/* Desktop Optimization */
+@media (min-width: 992px) {
+    /* Container width for desktop */
+    .container-fluid {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 30px;
+    }
+    
+    /* Login page centered */
+    .login-card {
+        max-width: 500px;
+    }
+    
+    /* Dashboard cards in grid */
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 25px;
+        margin-bottom: 30px;
+    }
+    
+    /* Tables with better spacing */
+    .table {
+        font-size: 1rem;
+    }
+    
+    .table th, .table td {
+        padding: 15px;
+    }
+    
+    /* Forms in two columns */
+    .form-row-desktop {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .form-row-desktop-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+    
+    /* Product grid */
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+    
+    /* Section grid larger */
+    .section-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 20px;
+    }
+    
+    /* Buttons not full width */
+    .btn {
+        width: auto;
+        margin-bottom: 0;
+    }
+    
+    /* Sticky footer only on mobile */
+    .sticky-footer {
+        position: static;
+        box-shadow: none;
+    }
+    
+    /* Cart layout side by side */
+    .cart-layout {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+    }
+    
+    /* Modal larger */
+    .modal-dialog {
+        max-width: 800px;
+    }
+    
+    /* Invoice better spacing */
+    .invoice-container {
+        padding: 50px;
+        max-width: 900px;
+    }
+    
+    /* Dashboard cards larger text */
+    .dashboard-card h3 {
+        font-size: 2.5rem;
+    }
+    
+    .dashboard-card i {
+        font-size: 4rem;
+    }
+    
+    /* Navbar items spaced */
+    .navbar-nav {
+        gap: 15px;
+    }
+    
+    /* Card hover effects stronger */
+    .card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    /* Better spacing for content */
+    .content-section {
+        margin-bottom: 40px;
+    }
+    
+    /* Action buttons group */
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    
+    /* Search bar wider */
+    .search-bar {
+        max-width: 500px;
+    }
+}
+
+/* Extra large screens */
+@media (min-width: 1400px) {
+    .container-fluid {
+        max-width: 1600px;
+    }
+    
+    .product-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Better focus states for accessibility */
+*:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Improve readability */
+p, li, td {
+    line-height: 1.6;
+}
+
+/* Better spacing for sections */
+section {
+    margin-bottom: 30px;
+}
+
+/* Improved table responsiveness on desktop */
+@media (min-width: 992px) {
+    .table-responsive {
+        overflow-x: visible;
+    }
+}
