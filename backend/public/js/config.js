@@ -1,3 +1,4 @@
+// Production API URL - Updated for deployment
 const API_URL = 'https://pharma-backend-fbsr.onrender.com/api';
 
 // Axios configuration
