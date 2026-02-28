@@ -69,12 +69,12 @@ exports.getGST = async (req, res) => {
 // Dashboard Analytics
 exports.getDashboard = async (req, res) => {
     try {
-        const [totalProducts] = await db.query('SELECT COUNT(*) as count FROM products');
-        const [totalOrders] = await db.query('SELECT COUNT(*) as count FROM orders');
-        const [totalUsers] = await db.query('SELECT COUNT(*) as count FROM users');
-        const [totalWorkers] = await db.query('SELECT COUNT(*) as count FROM workers');
-        const [lowStock] = await db.query('SELECT COUNT(*) as count FROM products WHERE stock_quantity < 10');
-        const [expiringSoon] = await db.query('SELECT COUNT(*) as count FROM products WHERE exp_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND exp_date >= CURDATE()');
+        const [totalProducts] = await db.query('SELECT COUNT(*)::int as count FROM products');
+        const [totalOrders] = await db.query('SELECT COUNT(*)::int as count FROM orders');
+        const [totalUsers] = await db.query('SELECT COUNT(*)::int as count FROM users');
+        const [totalWorkers] = await db.query('SELECT COUNT(*)::int as count FROM workers');
+        const [lowStock] = await db.query('SELECT COUNT(*)::int as count FROM products WHERE stock_quantity < 10');
+        const [expiringSoon] = await db.query('SELECT COUNT(*)::int as count FROM products WHERE exp_date <= CURRENT_DATE + INTERVAL \'30 days\' AND exp_date >= CURRENT_DATE');
         const [recentOrders] = await db.query(`
             SELECT o.*, u.medical_name, u.owner_name 
             FROM orders o 
@@ -85,12 +85,12 @@ exports.getDashboard = async (req, res) => {
         res.json({
             success: true,
             data: {
-                totalProducts: totalProducts[0].count,
-                totalOrders: totalOrders[0].count,
-                totalUsers: totalUsers[0].count,
-                totalWorkers: totalWorkers[0].count,
-                lowStock: lowStock[0].count,
-                expiringSoon: expiringSoon[0].count,
+                totalProducts: parseInt(totalProducts[0].count) || 0,
+                totalOrders: parseInt(totalOrders[0].count) || 0,
+                totalUsers: parseInt(totalUsers[0].count) || 0,
+                totalWorkers: parseInt(totalWorkers[0].count) || 0,
+                lowStock: parseInt(lowStock[0].count) || 0,
+                expiringSoon: parseInt(expiringSoon[0].count) || 0,
                 recentOrders
             }
         });

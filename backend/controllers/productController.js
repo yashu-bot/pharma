@@ -7,8 +7,8 @@ exports.getAllProducts = async (req, res) => {
         let query = `
             SELECT p.*, s.name as section_name,
             CASE 
-                WHEN p.exp_date < CURDATE() THEN 'expired'
-                WHEN p.exp_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 'expiring_soon'
+                WHEN p.exp_date < CURRENT_DATE THEN 'expired'
+                WHEN p.exp_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'expiring_soon'
                 ELSE 'valid'
             END as expiry_status,
             CASE 
@@ -22,12 +22,12 @@ exports.getAllProducts = async (req, res) => {
         const params = [];
         
         if (section_id) {
-            query += ' AND p.section_id = ?';
+            query += ' AND p.section_id = $' + (params.length + 1);
             params.push(section_id);
         }
         
         if (search) {
-            query += ' AND p.product_name LIKE ?';
+            query += ' AND p.product_name ILIKE $' + (params.length + 1);
             params.push(`%${search}%`);
         }
         
@@ -47,17 +47,17 @@ exports.getAvailableProducts = async (req, res) => {
         let query = `
             SELECT p.*, s.name as section_name,
             CASE 
-                WHEN p.exp_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 'expiring_soon'
+                WHEN p.exp_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'expiring_soon'
                 ELSE 'valid'
             END as expiry_status
             FROM products p 
             JOIN sections s ON p.section_id = s.id
-            WHERE p.exp_date >= CURDATE() AND p.stock_quantity > 0
+            WHERE p.exp_date >= CURRENT_DATE AND p.stock_quantity > 0
         `;
         const params = [];
         
         if (section_id) {
-            query += ' AND p.section_id = ?';
+            query += ' AND p.section_id = $' + (params.length + 1);
             params.push(section_id);
         }
         
