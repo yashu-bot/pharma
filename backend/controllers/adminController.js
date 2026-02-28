@@ -79,7 +79,8 @@ exports.getDashboard = async (req, res) => {
             SELECT o.*, u.medical_name, u.owner_name 
             FROM orders o 
             JOIN users u ON o.user_id = u.id 
-            ORDER BY o.created_at DESC LIMIT 5
+            WHERE DATE(o.created_at) = CURRENT_DATE
+            ORDER BY o.created_at DESC
         `);
         
         res.json({
