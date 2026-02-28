@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="invoice-container">
+        <div class="invoice-header">
+            <div>
+                <h4 id="medicalName"></h4>
+                <p id="medicalAddress" class="mb-0"></p>
+            </div>
+            <div class="text-end">
+                <h4 id="pharmaName"></h4>
+                <p id="pharmaAddress" class="mb-0"></p>
+                <p id="pharmaPhone" class="mb-0"></p>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <strong>Invoice #<span id="invoiceNumber"></span></strong><br>
+            <strong>Date:</strong> <span id="invoiceDate"></span>
+        </div>
+
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Product Name</th>
+                    <th>MG</th>
+                    <th>MFG Date</th>
+                    <th>EXP Date</th>
+                    <th>Batch No</th>
+                    <th>MRP</th>
+                    <th>Price</th>
+                    <th>Scheme</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody id="invoiceItems"></tbody>
+        </table>
+
+        <div class="invoice-footer">
+            <div class="mb-2">
+                <strong>Subtotal:</strong> <span id="invoiceSubtotal"></span>
+            </div>
+            <div class="mb-2">
+                <strong>SGST (<span id="invoiceSgstPercent"></span>%):</strong> <span id="invoiceSgst"></span>
+            </div>
+            <div class="mb-2">
+                <strong>CGST (<span id="invoiceCgstPercent"></span>%):</strong> <span id="invoiceCgst"></span>
+            </div>
+            <hr>
+            <div class="invoice-total">
+                <strong>Final Total:</strong> <span id="invoiceGrandTotal"></span>
+            </div>
+        </div>
+
+        <div class="text-center mt-4 no-print">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Invoice
+            </button>
+            <button class="btn btn-secondary" onclick="window.history.back()">
+                Back
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/config.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('order_id');
+        
+        async function loadInvoice() {
+            try {
+                const response = await axios.get(`/orders/${orderId}`);
+                const { order, items } = response.data.data;
+                
+                document.getElementById('medicalName').textContent = order.medical_name;
+                document.getElementById('medicalAddress').textContent = order.user_address;
+                document.getElementById('pharmaName').textContent = order.pharma_name;
+                document.getElementById('pharmaAddress').textContent = order.pharma_address;
+                document.getElementById('pharmaPhone').textContent = order.pharma_phone;
+                document.getElementById('invoiceNumber').textContent = order.id;
+                document.getElementById('invoiceDate').textContent = formatDate(order.created_at);
+                
+                const tbody = document.getElementById('invoiceItems');
+                tbody.innerHTML = items.map((item, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.product_name}</td>
+                        <td>${item.mg || '-'}</td>
+                        <td>${formatDate(item.mfg_date)}</td>
+                        <td>${formatDate(item.exp_date)}</td>
+                        <td>${item.batch_number}</td>
+                        <td>${formatCurrency(item.mrp)}</td>
+                        <td>${formatCurrency(item.selling_price)}</td>
+                        <td>${item.scheme ? `Buy ${item.scheme} Get 1 Free` : '-'}</td>
+                        <td>${item.quantity}${item.free_quantity > 0 ? ` + ${item.free_quantity} free` : ''}</td>
+                        <td>${formatCurrency(item.total)}</td>
+                    </tr>
+                `).join('');
+                
+                document.getElementById('invoiceSubtotal').textContent = formatCurrency(order.subtotal);
+                document.getElementById('invoiceSgst').textContent = formatCurrency(order.sgst_amount);
+                document.getElementById('invoiceCgst').textContent = formatCurrency(order.cgst_amount);
+                document.getElementById('invoiceSgstPercent').textContent = order.sgst_percentage;
+                document.getElementById('invoiceCgstPercent').textContent = order.cgst_percentage;
+                document.getElementById('invoiceGrandTotal').textContent = formatCurrency(order.grand_total);
+            } catch (error) {
+                alert('Error loading invoice');
+                console.error(error);
+            }
+        }
+        
+        loadInvoice();
+    </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fas fa-user-tie"></i> Worker Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="create-order.html">Create Order</a></li>
+                    <li class="nav-item"><a class="nav-link" href="orders.html">My Orders</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Back Button -->
+    <button class="back-button no-print" onclick="goBack()" title="Go Back">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="container-fluid mt-4">
+        <h2 class="mb-4">Worker Dashboard</h2>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <div class="dashboard-card">
+                    <i class="fas fa-shopping-cart text-success"></i>
+                    <h3 id="totalOrders">0</h3>
+                    <p>Total Orders</p>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="dashboard-card">
+                    <i class="fas fa-clock text-warning"></i>
+                    <h3 id="pendingOrders">0</h3>
+                    <p>Pending Orders</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Recent Orders</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Medical Name</th>
+                                <th>Total</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script>
+        checkAuth('worker');
+        
+        async function loadOrders() {
+            try {
+                const response = await axios.get('/orders/worker/my-orders');
+                const orders = response.data.data;
+                
+                document.getElementById('totalOrders').textContent = orders.length;
+                document.getElementById('pendingOrders').textContent = orders.filter(o => o.status === 'pending').length;
+                
+                const tbody = document.getElementById('ordersTable');
+                tbody.innerHTML = orders.slice(0, 10).map(order => `
+                    <tr>
+                        <td>#${order.id}</td>
+                        <td>${order.medical_name}</td>
+                        <td>${formatCurrency(order.grand_total)}</td>
+                        <td>${formatDate(order.created_at)}</td>
+                        <td><span class="badge bg-${order.status === 'completed' ? 'success' : 'warning'}">${order.status}</span></td>
+                        <td>
+                            <a href="../invoice.html?order_id=${order.id}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-file-invoice"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+        
+        loadOrders();
+    </script>
+</body>
+</html>

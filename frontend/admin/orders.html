@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fas fa-pills"></i> Pharma Admin</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="sections.html">Sections</a></li>
+                    <li class="nav-item"><a class="nav-link" href="products.html">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="workers.html">Workers</a></li>
+                    <li class="nav-item"><a class="nav-link" href="users.html">Users</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="orders.html">Orders</a></li>
+                    <li class="nav-item"><a class="nav-link" href="settings.html">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Back Button -->
+    <button class="back-button no-print" onclick="goBack()" title="Go Back">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="container-fluid mt-4">
+        <h2 class="mb-4">All Orders</h2>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-primary w-100" onclick="loadOrders()">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-secondary w-100" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Medical Name</th>
+                                <th>Owner</th>
+                                <th>Worker</th>
+                                <th>Total</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script>
+        checkAuth('admin');
+        
+        async function loadOrders() {
+            try {
+                const params = {};
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                
+                if (startDate) params.start_date = startDate;
+                if (endDate) params.end_date = endDate;
+                
+                const response = await axios.get('/orders/admin/all', { params });
+                const orders = response.data.data;
+                
+                const tbody = document.getElementById('ordersTable');
+                tbody.innerHTML = orders.map(o => `
+                    <tr>
+                        <td>#${o.id}</td>
+                        <td>${o.medical_name}</td>
+                        <td>${o.owner_name}</td>
+                        <td>${o.worker_name || '-'}</td>
+                        <td>${formatCurrency(o.grand_total)}</td>
+                        <td>${formatDate(o.created_at)}</td>
+                        <td><span class="badge bg-${o.status === 'completed' ? 'success' : o.status === 'cancelled' ? 'danger' : 'warning'}">${o.status}</span></td>
+                        <td>
+                            <a href="../invoice.html?order_id=${o.id}" class="btn btn-sm btn-primary" target="_blank">
+                                <i class="fas fa-file-invoice"></i> Invoice
+                            </a>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading orders:', error);
+            }
+        }
+        
+        function clearFilters() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            loadOrders();
+        }
+        
+        loadOrders();
+    </script>
+</body>
+</html>

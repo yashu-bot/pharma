@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Pharma Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card card">
+            <div class="card-body p-4">
+                <div class="login-header">
+                    <i class="fas fa-pills fa-3x text-primary mb-3"></i>
+                    <h2>Pharma Management</h2>
+                    <p class="text-muted">Login to your account</p>
+                </div>
+
+                <ul class="nav nav-pills nav-fill mb-4" id="loginTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="pill" href="#admin">Admin</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="pill" href="#worker">Worker</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="pill" href="#user">User</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="admin">
+                        <form id="adminLoginForm">
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Login as Admin</button>
+                        </form>
+                    </div>
+
+                    <div class="tab-pane fade" id="worker">
+                        <form id="workerLoginForm">
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Login as Worker</button>
+                        </form>
+                    </div>
+
+                    <div class="tab-pane fade" id="user">
+                        <form id="userLoginForm">
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Login as User</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <a href="forgot-password.html" class="text-decoration-none">Forgot Password?</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>

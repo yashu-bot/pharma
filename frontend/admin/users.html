@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fas fa-pills"></i> Pharma Admin</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="sections.html">Sections</a></li>
+                    <li class="nav-item"><a class="nav-link" href="products.html">Products</a></li>
+                    <li class="nav-item"><a class="nav-link" href="workers.html">Workers</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="users.html">Users</a></li>
+                    <li class="nav-item"><a class="nav-link" href="orders.html">Orders</a></li>
+                    <li class="nav-item"><a class="nav-link" href="settings.html">Settings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Back Button -->
+    <button class="back-button no-print" onclick="goBack()" title="Go Back">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="container-fluid mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Medical Store Owners</h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal" onclick="resetForm()">
+                <i class="fas fa-plus"></i> Add User
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Medical Name</th>
+                                <th>Owner Name</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Address</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Medical Store Owner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="userForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Medical Store Name</label>
+                                <input type="text" class="form-control" name="medical_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Owner Name</label>
+                                <input type="text" class="form-control" name="owner_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Address</label>
+                                <textarea class="form-control" name="address" rows="2"></textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" name="password" minlength="6" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script>
+        checkAuth('admin');
+        let users = [];
+        
+        async function loadUsers() {
+            try {
+                const response = await axios.get('/users');
+                users = response.data.data;
+                
+                const tbody = document.getElementById('usersTable');
+                tbody.innerHTML = users.map(u => `
+                    <tr>
+                        <td>${u.medical_name}</td>
+                        <td>${u.owner_name}</td>
+                        <td>${u.phone}</td>
+                        <td>${u.email}</td>
+                        <td>${u.address || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+        
+        function resetForm() {
+            document.getElementById('userForm').reset();
+        }
+        
+        async function deleteUser(id) {
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            
+            try {
+                await axios.delete(`/users/${id}`);
+                showAlert('User deleted successfully', 'success');
+                loadUsers();
+            } catch (error) {
+                showAlert(error.response?.data?.message || 'Error deleting user', 'danger');
+            }
+        }
+        
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                await axios.post('/users', data);
+                showAlert('User added successfully', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+                loadUsers();
+            } catch (error) {
+                showAlert(error.response?.data?.message || 'Error adding user', 'danger');
+            }
+        });
+        
+        loadUsers();
+    </script>
+</body>
+</html>

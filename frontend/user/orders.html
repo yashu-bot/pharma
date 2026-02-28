@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - User</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fas fa-store"></i> Medical Store</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="shop.html">Shop</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="orders.html">My Orders</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cart.html">
+                            <i class="fas fa-shopping-cart"></i> Cart <span class="badge bg-danger" id="cartCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Back Button -->
+    <button class="back-button no-print" onclick="goBack()" title="Go Back">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="container-fluid mt-4">
+        <h2 class="mb-4">My Orders</h2>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/cart.js"></script>
+    <script>
+        checkAuth('user');
+        
+        async function loadOrders() {
+            try {
+                const response = await axios.get('/orders/user/my-orders');
+                const orders = response.data.data;
+                
+                const tbody = document.getElementById('ordersTable');
+                if (orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No orders yet. <a href="shop.html">Start shopping!</a></td></tr>';
+                    return;
+                }
+                
+                tbody.innerHTML = orders.map(order => `
+                    <tr>
+                        <td>#${order.id}</td>
+                        <td>${order.order_type === 'worker' ? 'Worker Order' : 'Self Order'}</td>
+                        <td>${formatCurrency(order.grand_total)}</td>
+                        <td>${formatDate(order.created_at)}</td>
+                        <td><span class="badge bg-${order.status === 'completed' ? 'success' : order.status === 'cancelled' ? 'danger' : 'warning'}">${order.status}</span></td>
+                        <td>
+                            <a href="../invoice.html?order_id=${order.id}" class="btn btn-sm btn-primary" target="_blank">
+                                <i class="fas fa-file-invoice"></i> View Invoice
+                            </a>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showAlert('Error loading orders', 'danger');
+            }
+        }
+        
+        loadOrders();
+        updateCartCount();
+    </script>
+</body>
+</html>

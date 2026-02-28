@@ -1,0 +1,41 @@
+services:
+  # Backend Web Service
+  - type: web
+    name: pharma-backend
+    env: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DB_HOST
+        fromDatabase:
+          name: pharma-db
+          property: host
+      - key: DB_USER
+        fromDatabase:
+          name: pharma-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: pharma-db
+          property: password
+      - key: DB_NAME
+        value: pharma_db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE
+        value: 7d
+
+databases:
+  # PostgreSQL Database
+  - name: pharma-db
+    databaseName: pharma_db
+    user: pharma_user
+    plan: free

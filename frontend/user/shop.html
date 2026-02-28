@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - User Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fas fa-store"></i> Medical Store</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="shop.html">Shop</a></li>
+                    <li class="nav-item"><a class="nav-link" href="orders.html">My Orders</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cart.html">
+                            <i class="fas fa-shopping-cart"></i> Cart <span class="badge bg-danger" id="cartCount">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="#" onclick="logout()">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Back Button -->
+    <button class="back-button no-print" onclick="goBack()" title="Go Back">
+        <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="container-fluid mt-4">
+        <h2 class="mb-4">Browse Products</h2>
+        
+        <!-- Search Bar -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" id="searchProducts" placeholder="🔍 Search products by name..." onkeyup="searchProducts()">
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-secondary" onclick="clearSearch()">
+                            <i class="fas fa-times"></i> Clear Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-grid" id="sectionsContainer"></div>
+        
+        <div class="row" id="productsContainer"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/cart.js"></script>
+    <script>
+        checkAuth('user');
+        
+        let selectedSection = null;
+        let allProducts = [];
+        
+        async function loadSections() {
+            try {
+                const response = await axios.get('/sections');
+                const sections = response.data.data;
+                
+                const container = document.getElementById('sectionsContainer');
+                container.innerHTML = sections.map(s => `
+                    <div class="section-item ${selectedSection === s.id ? 'active' : ''}" onclick="selectSection(${s.id})">
+                        <i class="fas fa-pills"></i>
+                        <div>${s.name}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading sections:', error);
+            }
+        }
+        
+        function selectSection(id) {
+            selectedSection = id;
+            loadSections();
+            loadProducts();
+        }
+        
+        async function loadProducts() {
+            try {
+                const params = selectedSection ? { section_id: selectedSection } : {};
+                const response = await axios.get('/products', { params });
+                allProducts = response.data.data;
+                displayProducts(allProducts);
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+        
+        function displayProducts(products) {
+            const container = document.getElementById('productsContainer');
+            
+            if (products.length === 0) {
+                container.innerHTML = '<div class="col-12"><div class="alert alert-info">No products found</div></div>';
+                return;
+            }
+            
+            container.innerHTML = products.map(p => {
+                const isExpiringSoon = p.expiry_status === 'expiring_soon';
+                return `
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card product-card">
+                            ${isExpiringSoon ? '<span class="badge bg-warning product-badge">Expiring Soon</span>' : ''}
+                            <div class="card-body">
+                                <div class="product-image">
+                                    <i class="fas fa-capsules"></i>
+                                </div>
+                                <h5 class="card-title">${p.product_name}</h5>
+                                ${p.mg ? `<p class="text-muted mb-1">${p.mg}</p>` : ''}
+                                <p class="mb-1"><strong>Price:</strong> ${formatCurrency(p.selling_price)}</p>
+                                ${p.scheme ? `<p class="text-success mb-1"><small><i class="fas fa-gift"></i> Buy ${p.scheme} Get 1 FREE!</small></p>` : ''}
+                                <p class="mb-2"><small>Stock: ${p.stock_quantity}</small></p>
+                                <button class="btn btn-primary btn-sm w-100" onclick="addToCart(${p.id}, '${p.product_name}', ${p.selling_price}, ${p.stock_quantity})">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function searchProducts() {
+            const searchTerm = document.getElementById('searchProducts').value.toLowerCase();
+            
+            if (searchTerm === '') {
+                displayProducts(allProducts);
+                return;
+            }
+            
+            const filtered = allProducts.filter(p => 
+                p.product_name.toLowerCase().includes(searchTerm) ||
+                (p.mg && p.mg.toLowerCase().includes(searchTerm))
+            );
+            
+            displayProducts(filtered);
+        }
+        
+        function clearSearch() {
+            document.getElementById('searchProducts').value = '';
+            selectedSection = null;
+            loadSections();
+            loadProducts();
+        }
+        
+        loadSections();
+        loadProducts();
+        updateCartCount();
+    </script>
+</body>
+</html>
