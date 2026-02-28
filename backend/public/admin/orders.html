@@ -115,7 +115,15 @@
                         <td>${o.worker_name || '-'}</td>
                         <td>${formatCurrency(o.grand_total)}</td>
                         <td>${formatDate(o.created_at)}</td>
-                        <td><span class="badge bg-${o.status === 'completed' ? 'success' : o.status === 'cancelled' ? 'danger' : 'warning'}">${o.status}</span></td>
+                        <td>
+                            <select class="form-select form-select-sm" onchange="updateStatus(${o.id}, this.value)" style="min-width: 120px;">
+                                <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>Processing</option>
+                                <option value="completed" ${o.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                        </td>
                         <td>
                             <a href="../invoice.html?order_id=${o.id}" class="btn btn-sm btn-primary" target="_blank">
                                 <i class="fas fa-file-invoice"></i> Invoice
@@ -132,6 +140,29 @@
             document.getElementById('startDate').value = '';
             document.getElementById('endDate').value = '';
             loadOrders();
+        }
+        
+        async function updateStatus(orderId, newStatus) {
+            try {
+                await axios.put(`/orders/${orderId}/status`, { status: newStatus });
+                showAlert('Order status updated successfully', 'success');
+                loadOrders();
+            } catch (error) {
+                console.error('Error updating status:', error);
+                showAlert('Failed to update order status', 'danger');
+                loadOrders();
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container-fluid').prepend(alertDiv);
+            setTimeout(() => alertDiv.remove(), 3000);
         }
         
         loadOrders();

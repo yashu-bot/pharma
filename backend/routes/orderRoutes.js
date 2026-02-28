@@ -24,7 +24,7 @@ router.get('/:id', auth(['admin', 'worker', 'user']), orderController.getOrderDe
 
 // Update order status (admin only)
 router.put('/:id/status', auth(['admin']), [
-    body('status').isIn(['pending', 'processing', 'completed', 'cancelled']).withMessage('Valid status is required'),
+    body('status').isIn(['pending', 'processing', 'completed', 'delivered', 'cancelled']).withMessage('Valid status is required'),
     validate
 ], orderController.updateOrderStatus);
 

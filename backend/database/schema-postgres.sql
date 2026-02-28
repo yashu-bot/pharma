@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS orders (
     sgst_percentage DECIMAL(5,2) NOT NULL,
     cgst_percentage DECIMAL(5,2) NOT NULL,
     grand_total DECIMAL(10,2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'cancelled')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'delivered', 'cancelled')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (worker_id) REFERENCES workers(id) ON DELETE SET NULL
