@@ -20,7 +20,7 @@ exports.placeOrder = async (req, res) => {
         const validatedItems = [];
         
         for (const item of items) {
-            const [products] = await connection.query('SELECT * FROM products WHERE id = ? FOR UPDATE', [item.product_id]);
+            const [products] = await connection.query('SELECT * FROM products WHERE id = $1 FOR UPDATE', [item.product_id]);
             
             if (products.length === 0) {
                 await connection.rollback();
@@ -87,20 +87,20 @@ exports.placeOrder = async (req, res) => {
         
         // Insert order
         const [orderResult] = await connection.query(
-            'INSERT INTO orders (user_id, worker_id, order_type, subtotal, sgst_amount, cgst_amount, sgst_percentage, cgst_percentage, grand_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO orders (user_id, worker_id, order_type, subtotal, sgst_amount, cgst_amount, sgst_percentage, cgst_percentage, grand_total) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
             [user_id, worker_id, order_type, subtotal, sgst_amount, cgst_amount, sgst_percentage, cgst_percentage, grand_total]
         );
         
-        const order_id = orderResult.insertId;
+        const order_id = orderResult[0].id;
         
         // Insert order items and update stock
         for (const item of validatedItems) {
             await connection.query(
-                'INSERT INTO order_items (order_id, product_id, product_name, mg, mfg_date, exp_date, batch_number, mrp, selling_price, scheme, quantity, free_quantity, total_quantity, stock_deducted, total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO order_items (order_id, product_id, product_name, mg, mfg_date, exp_date, batch_number, mrp, selling_price, scheme, quantity, free_quantity, total_quantity, stock_deducted, total) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)',
                 [order_id, item.product_id, item.product_name, item.mg, item.mfg_date, item.exp_date, item.batch_number, item.mrp, item.selling_price, item.scheme, item.quantity, item.free_quantity, item.total_quantity, item.stock_deducted, item.total]
             );
             
-            await connection.query('UPDATE products SET stock_quantity = ? WHERE id = ?', [item.new_stock, item.product_id]);
+            await connection.query('UPDATE products SET stock_quantity = $1 WHERE id = $2', [item.new_stock, item.product_id]);
         }
         
         await connection.commit();
@@ -140,17 +140,17 @@ exports.getAllOrders = async (req, res) => {
         const params = [];
         
         if (start_date && end_date) {
-            query += ' AND DATE(o.created_at) BETWEEN ? AND ?';
+            query += ' AND DATE(o.created_at) BETWEEN $' + (params.length + 1) + ' AND $' + (params.length + 2);
             params.push(start_date, end_date);
         }
         
         if (user_id) {
-            query += ' AND o.user_id = ?';
+            query += ' AND o.user_id = $' + (params.length + 1);
             params.push(user_id);
         }
         
         if (worker_id) {
-            query += ' AND o.worker_id = ?';
+            query += ' AND o.worker_id = $' + (params.length + 1);
             params.push(worker_id);
         }
         
@@ -167,7 +167,7 @@ exports.getAllOrders = async (req, res) => {
 exports.getUserOrders = async (req, res) => {
     try {
         const [orders] = await db.query(
-            'SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC',
+            'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
             [req.user.id]
         );
         res.json({ success: true, data: orders });
@@ -183,7 +183,7 @@ exports.getWorkerOrders = async (req, res) => {
             `SELECT o.*, u.medical_name, u.owner_name 
             FROM orders o 
             JOIN users u ON o.user_id = u.id 
-            WHERE o.worker_id = ? 
+            WHERE o.worker_id = $1
             ORDER BY o.created_at DESC`,
             [req.user.id]
         );
@@ -205,7 +205,7 @@ exports.getOrderDetails = async (req, res) => {
             JOIN users u ON o.user_id = u.id
             LEFT JOIN workers w ON o.worker_id = w.id
             CROSS JOIN admin a
-            WHERE o.id = ?`,
+            WHERE o.id = $1`,
             [id]
         );
         
@@ -213,7 +213,7 @@ exports.getOrderDetails = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
         
-        const [items] = await db.query('SELECT * FROM order_items WHERE order_id = ?', [id]);
+        const [items] = await db.query('SELECT * FROM order_items WHERE order_id = $1', [id]);
         
         res.json({ 
             success: true, 
@@ -233,7 +233,7 @@ exports.updateOrderStatus = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
         
-        await db.query('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
+        await db.query('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
         res.json({ success: true, message: 'Order status updated successfully' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
