@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://pharma-backend-fbsr.onrender.com/api';
 
 // Axios configuration
 axios.defaults.baseURL = API_URL;
