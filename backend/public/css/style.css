@@ -816,21 +816,44 @@ textarea.form-control {
 
 /* Print Styles */
 @media print {
+    @page {
+        margin: 0.5cm;
+    }
+    
     body * {
         visibility: hidden;
     }
+    
     .invoice-container, .invoice-container * {
         visibility: visible;
     }
+    
     .invoice-container {
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
         box-shadow: none;
+        padding: 1cm;
     }
+    
     .no-print, .back-button, .navbar {
         display: none !important;
+    }
+    
+    /* Hide URL in header/footer */
+    body {
+        margin: 0;
+    }
+    
+    /* Remove default browser print headers/footers */
+    @page {
+        margin: 0;
+    }
+    
+    html, body {
+        height: 100%;
+        overflow: hidden;
     }
 }
 
