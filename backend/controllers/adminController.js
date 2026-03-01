@@ -4,7 +4,7 @@ const db = require('../config/database');
 // Get Admin Profile
 exports.getProfile = async (req, res) => {
     try {
-        const [admins] = await db.query('SELECT id, pharma_name, email, address, phone, sgst_percentage, cgst_percentage FROM admin WHERE id = $1', [req.user.id]);
+        const [admins] = await db.query('SELECT id, pharma_name, email, address, phone, sgst_percentage, cgst_percentage FROM admin WHERE id = ?', [req.user.id]);
         res.json({ success: true, data: admins[0] });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -15,7 +15,7 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     try {
         const { pharma_name, email, address, phone } = req.body;
-        await db.query('UPDATE admin SET pharma_name = $1, email = $2, address = $3, phone = $4 WHERE id = $5', 
+        await db.query('UPDATE admin SET pharma_name = ?, email = ?, address = ?, phone = ? WHERE id = ?', 
             [pharma_name, email, address, phone, req.user.id]);
         res.json({ success: true, message: 'Profile updated successfully' });
     } catch (error) {
@@ -28,7 +28,7 @@ exports.changePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
         
-        const [admins] = await db.query('SELECT password FROM admin WHERE id = $1', [req.user.id]);
+        const [admins] = await db.query('SELECT password FROM admin WHERE id = ?', [req.user.id]);
         const isMatch = await bcrypt.compare(currentPassword, admins[0].password);
         
         if (!isMatch) {
@@ -36,7 +36,7 @@ exports.changePassword = async (req, res) => {
         }
         
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        await db.query('UPDATE admin SET password = $1 WHERE id = $2', [hashedPassword, req.user.id]);
+        await db.query('UPDATE admin SET password = ? WHERE id = ?', [hashedPassword, req.user.id]);
         
         res.json({ success: true, message: 'Password changed successfully' });
     } catch (error) {
@@ -48,7 +48,7 @@ exports.changePassword = async (req, res) => {
 exports.updateGST = async (req, res) => {
     try {
         const { sgst_percentage, cgst_percentage } = req.body;
-        await db.query('UPDATE admin SET sgst_percentage = $1, cgst_percentage = $2 WHERE id = $3', 
+        await db.query('UPDATE admin SET sgst_percentage = ?, cgst_percentage = ? WHERE id = ?', 
             [sgst_percentage, cgst_percentage, req.user.id]);
         res.json({ success: true, message: 'GST settings updated successfully' });
     } catch (error) {
