@@ -101,6 +101,22 @@ p {
     font-size: 1.75rem;
 }
 
+.navbar-toggler {
+    border: 2px solid var(--primary);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%234F46E5' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
 .navbar-nav .nav-link {
     color: var(--gray-700);
     font-weight: 500;
@@ -117,6 +133,30 @@ p {
 .navbar-nav .nav-link.active {
     background-color: var(--primary);
     color: var(--white);
+}
+
+/* Mobile Navbar */
+@media (max-width: 991px) {
+    .navbar-collapse {
+        background: var(--white);
+        padding: 1rem;
+        margin-top: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .navbar-nav {
+        gap: 0.5rem;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .navbar-nav .nav-item:last-child .nav-link {
+        border-bottom: none;
+    }
 }
 
 /* Cards - Modern Design */
@@ -817,7 +857,19 @@ textarea.form-control {
 /* Print Styles */
 @media print {
     @page {
-        margin: 0.5cm;
+        size: A4;
+        margin: 1cm;
+    }
+    
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    
+    body {
+        margin: 0;
+        padding: 0;
+        background: white !important;
     }
     
     body * {
@@ -833,27 +885,37 @@ textarea.form-control {
         left: 0;
         top: 0;
         width: 100%;
+        max-width: 100%;
         box-shadow: none;
-        padding: 1cm;
+        padding: 0;
+        margin: 0;
+        border-radius: 0;
     }
     
-    .no-print, .back-button, .navbar {
+    .no-print, .back-button, .navbar, .alert {
         display: none !important;
+        visibility: hidden !important;
     }
     
-    /* Hide URL in header/footer */
-    body {
-        margin: 0;
+    .invoice-header {
+        page-break-after: avoid;
     }
     
-    /* Remove default browser print headers/footers */
-    @page {
-        margin: 0;
+    .invoice-table {
+        page-break-inside: avoid;
     }
     
-    html, body {
-        height: 100%;
-        overflow: hidden;
+    .invoice-footer {
+        page-break-before: avoid;
+    }
+    
+    /* Ensure text is black for printing */
+    .invoice-container h1,
+    .invoice-container h4,
+    .invoice-container p,
+    .invoice-container td,
+    .invoice-container th {
+        color: #000 !important;
     }
 }
 

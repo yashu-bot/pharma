@@ -64,7 +64,10 @@
         </div>
 
         <div class="text-center mt-4 no-print">
-            <button class="btn btn-primary" onclick="window.print()">
+            <div class="alert alert-info mb-3">
+                <strong>Print Tip:</strong> To hide the URL in print, disable "Headers and footers" in your browser's print settings.
+            </div>
+            <button class="btn btn-primary" onclick="printInvoice()">
                 <i class="fas fa-print"></i> Print Invoice
             </button>
             <button class="btn btn-secondary" onclick="window.history.back()">
@@ -118,6 +121,23 @@
             } catch (error) {
                 alert('Error loading invoice');
                 console.error(error);
+            }
+        }
+        
+        function printInvoice() {
+            // Try to open print dialog with minimal headers/footers
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(document.documentElement.outerHTML);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 250);
+            } else {
+                // Fallback to regular print
+                window.print();
             }
         }
         
