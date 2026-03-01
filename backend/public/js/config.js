@@ -58,20 +58,30 @@ const goBack = () => {
     window.history.back();
 };
 
-// Check authentication
+// Check authentication - Immediate redirect if not authenticated
 const checkAuth = (requiredRole) => {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     
+    // Immediate redirect if no token or user
     if (!token || !user.role) {
-        window.location.href = '/login.html';
-        return false;
+        localStorage.clear();
+        window.location.replace('/login.html');
+        throw new Error('Not authenticated');
     }
     
+    // Immediate redirect if wrong role
     if (requiredRole && user.role !== requiredRole) {
-        window.location.href = '/login.html';
-        return false;
+        localStorage.clear();
+        window.location.replace('/login.html');
+        throw new Error('Wrong role');
     }
+    
+    // Verify token with server in background
+    axios.get('/auth/verify').catch(() => {
+        localStorage.clear();
+        window.location.replace('/login.html');
+    });
     
     return true;
 };

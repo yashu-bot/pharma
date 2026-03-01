@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const validate = require('../middleware/validator');
+const auth = require('../middleware/auth');
 const authController = require('../controllers/authController');
 
 // Admin Login
@@ -34,5 +35,16 @@ router.post('/forgot-password', [
     body('role').isIn(['admin', 'worker', 'user']).withMessage('Valid role is required'),
     validate
 ], authController.forgotPassword);
+
+// Verify Token
+router.get('/verify', auth(['admin', 'worker', 'user']), (req, res) => {
+    res.json({ 
+        success: true, 
+        user: {
+            id: req.user.id,
+            role: req.user.role
+        }
+    });
+});
 
 module.exports = router;
