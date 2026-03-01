@@ -1,28 +1,13 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Create transporter
-const createTransporter = () => {
-    return nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, // Use TLS
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASSWORD
-        },
-        tls: {
-            rejectUnauthorized: false
-        }
-    });
-};
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Send OTP Email
 exports.sendOTPEmail = async (email, otp, userName) => {
     try {
-        const transporter = createTransporter();
-        
-        const mailOptions = {
-            from: `"Pharma Management System" <${process.env.EMAIL_USER}>`,
+        const { data, error } = await resend.emails.send({
+            from: 'Pharma Management <onboarding@resend.dev>',
             to: email,
             subject: 'Password Reset OTP - Pharma Management',
             html: `
@@ -74,13 +59,17 @@ exports.sendOTPEmail = async (email, otp, userName) => {
                 </body>
                 </html>
             `
-        };
-        
-        const info = await transporter.sendMail(mailOptions);
-        console.log('OTP Email sent:', info.messageId);
-        return { success: true, messageId: info.messageId };
+        });
+
+        if (error) {
+            console.error('Resend error:', error);
+            throw new Error('Failed to send OTP email');
+        }
+
+        console.log('OTP Email sent via Resend:', data.id);
+        return { success: true, messageId: data.id };
     } catch (error) {
-        console.error('Error sending OTP email:', error);
+        console.error('Error sending OTP email via Resend:', error);
         throw new Error('Failed to send OTP email');
     }
 };
