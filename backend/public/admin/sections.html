@@ -43,21 +43,7 @@
             </button>
         </div>
 
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Section Name</th>
-                                <th style="width: 150px;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="sectionsContainer"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <div class="d-flex flex-wrap gap-2" id="sectionsContainer"></div>
     </div>
 
     <!-- Section Modal -->
@@ -99,17 +85,15 @@
                 
                 const container = document.getElementById('sectionsContainer');
                 container.innerHTML = sections.map(s => `
-                    <tr>
-                        <td><strong>${s.name}</strong></td>
-                        <td>
-                            <button class="btn btn-sm btn-warning me-1" onclick="editSection(${s.id})" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteSection(${s.id})" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            ${s.name}
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="editSection(${s.id}); return false;"><i class="fas fa-edit"></i> Edit</a></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteSection(${s.id}); return false;"><i class="fas fa-trash"></i> Delete</a></li>
+                        </ul>
+                    </div>
                 `).join('');
             } catch (error) {
                 console.error('Error loading sections:', error);
