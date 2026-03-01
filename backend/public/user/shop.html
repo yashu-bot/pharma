@@ -116,13 +116,11 @@
                 const isExpiringSoon = p.expiry_status === 'expiring_soon';
                 const schemeText = p.scheme ? ` 🎁 Buy ${p.scheme} Get 1` : '';
                 return `
-                    <button class="btn btn-outline-primary position-relative" onclick="addToCart(${p.id}, '${p.product_name}', ${p.selling_price}, ${p.stock_quantity})" style="min-width: 200px;">
-                        <div class="text-start">
-                            <strong>${p.product_name}</strong> ${p.mg ? `<small>(${p.mg})</small>` : ''}
-                            <br>
-                            <small>${formatCurrency(p.selling_price)}${schemeText}</small>
-                        </div>
-                        ${isExpiringSoon ? '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning">⚠️</span>' : ''}
+                    <button class="btn btn-outline-primary text-start" onclick="addToCart(${p.id}, '${p.product_name}', ${p.selling_price}, ${p.stock_quantity})" style="min-width: 250px; max-width: 300px;">
+                        <strong>${p.product_name}</strong> ${p.mg ? `<span class="text-muted">(${p.mg})</span>` : ''}
+                        <br>
+                        <span class="text-primary fw-bold">${formatCurrency(p.selling_price)}</span>${schemeText}
+                        ${isExpiringSoon ? ' <span class="badge bg-warning">⚠️</span>' : ''}
                     </button>
                 `;
             }).join('');
