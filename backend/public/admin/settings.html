@@ -49,6 +49,11 @@
                                 <input type="text" class="form-control" name="pharma_name" required>
                             </div>
                             <div class="mb-3">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-control" name="email" placeholder="your-email@example.com" required>
+                                <small class="text-muted">Required for password reset via OTP</small>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Address</label>
                                 <textarea class="form-control" name="address" rows="3"></textarea>
                             </div>
@@ -112,6 +117,7 @@
                 const data = response.data.data;
                 
                 document.querySelector('[name="pharma_name"]').value = data.pharma_name;
+                document.querySelector('[name="email"]').value = data.email || '';
                 document.querySelector('[name="address"]').value = data.address || '';
                 document.querySelector('[name="phone"]').value = data.phone;
             } catch (error) {

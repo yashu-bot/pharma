@@ -26,6 +26,25 @@ router.post('/user/login', [
     validate
 ], authController.userLogin);
 
+// Request OTP for Password Reset
+router.post('/request-otp', [
+    body('phone').notEmpty().withMessage('Phone is required'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('role').isIn(['admin', 'worker', 'user']).withMessage('Valid role is required'),
+    validate
+], authController.requestOTP);
+
+// Verify OTP and Reset Password
+router.post('/verify-otp-reset', [
+    body('phone').notEmpty().withMessage('Phone is required'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
+    body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('confirmPassword').notEmpty().withMessage('Confirm password is required'),
+    body('role').isIn(['admin', 'worker', 'user']).withMessage('Valid role is required'),
+    validate
+], authController.verifyOTPAndResetPassword);
+
 // Forgot Password
 router.post('/forgot-password', [
     body('phone').notEmpty().withMessage('Phone is required'),

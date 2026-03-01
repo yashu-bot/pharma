@@ -4,7 +4,7 @@ const db = require('../config/database');
 // Get Admin Profile
 exports.getProfile = async (req, res) => {
     try {
-        const [admins] = await db.query('SELECT id, pharma_name, address, phone, sgst_percentage, cgst_percentage FROM admin WHERE id = ?', [req.user.id]);
+        const [admins] = await db.query('SELECT id, pharma_name, email, address, phone, sgst_percentage, cgst_percentage FROM admin WHERE id = ?', [req.user.id]);
         res.json({ success: true, data: admins[0] });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -14,9 +14,9 @@ exports.getProfile = async (req, res) => {
 // Update Admin Profile
 exports.updateProfile = async (req, res) => {
     try {
-        const { pharma_name, address, phone } = req.body;
-        await db.query('UPDATE admin SET pharma_name = ?, address = ?, phone = ? WHERE id = ?', 
-            [pharma_name, address, phone, req.user.id]);
+        const { pharma_name, email, address, phone } = req.body;
+        await db.query('UPDATE admin SET pharma_name = ?, email = ?, address = ?, phone = ? WHERE id = ?', 
+            [pharma_name, email, address, phone, req.user.id]);
         res.json({ success: true, message: 'Profile updated successfully' });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
