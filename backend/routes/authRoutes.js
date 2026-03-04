@@ -45,6 +45,16 @@ router.post('/verify-otp-reset', [
     validate
 ], authController.verifyOTPAndResetPassword);
 
+// Direct Password Reset (for User/Worker without OTP)
+router.post('/direct-reset-password', [
+    body('phone').notEmpty().withMessage('Phone is required'),
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('confirmPassword').notEmpty().withMessage('Confirm password is required'),
+    body('role').isIn(['worker', 'user']).withMessage('Valid role is required'),
+    validate
+], authController.directResetPassword);
+
 // Forgot Password
 router.post('/forgot-password', [
     body('phone').notEmpty().withMessage('Phone is required'),

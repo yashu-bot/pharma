@@ -117,6 +117,9 @@
         checkAuth('admin');
         let users = [];
         
+        let users = [];
+        let editingUserId = null;
+        
         async function loadUsers() {
             try {
                 const response = await axios.get('/users');
@@ -131,6 +134,9 @@
                         <td>${u.email}</td>
                         <td>${u.address || '-'}</td>
                         <td>
+                            <button class="btn btn-sm btn-primary me-1" onclick="editUser(${u.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
                             <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
@@ -144,6 +150,26 @@
         
         function resetForm() {
             document.getElementById('userForm').reset();
+            editingUserId = null;
+            document.querySelector('#userModal .modal-title').textContent = 'Add Medical Store Owner';
+            document.querySelector('[name="password"]').required = true;
+        }
+        
+        function editUser(id) {
+            const user = users.find(u => u.id === id);
+            if (!user) return;
+            
+            editingUserId = id;
+            document.querySelector('#userModal .modal-title').textContent = 'Edit Medical Store Owner';
+            document.querySelector('[name="medical_name"]').value = user.medical_name;
+            document.querySelector('[name="owner_name"]').value = user.owner_name;
+            document.querySelector('[name="phone"]').value = user.phone;
+            document.querySelector('[name="email"]').value = user.email;
+            document.querySelector('[name="address"]').value = user.address || '';
+            document.querySelector('[name="password"]').required = false;
+            document.querySelector('[name="password"]').value = '';
+            
+            new bootstrap.Modal(document.getElementById('userModal')).show();
         }
         
         async function deleteUser(id) {
@@ -163,13 +189,26 @@
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
             
+            // Remove password if empty (for edit)
+            if (!data.password) {
+                delete data.password;
+            }
+            
             try {
-                await axios.post('/users', data);
-                showAlert('User added successfully', 'success');
+                if (editingUserId) {
+                    // Update existing user
+                    await axios.put(`/users/${editingUserId}`, data);
+                    showAlert('User updated successfully', 'success');
+                } else {
+                    // Add new user
+                    await axios.post('/users', data);
+                    showAlert('User added successfully', 'success');
+                }
                 bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
                 loadUsers();
+                resetForm();
             } catch (error) {
-                showAlert(error.response?.data?.message || 'Error adding user', 'danger');
+                showAlert(error.response?.data?.message || 'Error saving user', 'danger');
             }
         });
         

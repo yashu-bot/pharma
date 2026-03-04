@@ -105,6 +105,7 @@
     <script>
         checkAuth('admin');
         let workers = [];
+        let editingWorkerId = null;
         
         async function loadWorkers() {
             try {
@@ -119,6 +120,9 @@
                         <td>${w.email}</td>
                         <td>${formatDate(w.created_at)}</td>
                         <td>
+                            <button class="btn btn-sm btn-primary me-1" onclick="editWorker(${w.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
                             <button class="btn btn-sm btn-danger" onclick="deleteWorker(${w.id})">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
@@ -132,6 +136,24 @@
         
         function resetForm() {
             document.getElementById('workerForm').reset();
+            editingWorkerId = null;
+            document.querySelector('#workerModal .modal-title').textContent = 'Add Worker';
+            document.querySelector('[name="password"]').required = true;
+        }
+        
+        function editWorker(id) {
+            const worker = workers.find(w => w.id === id);
+            if (!worker) return;
+            
+            editingWorkerId = id;
+            document.querySelector('#workerModal .modal-title').textContent = 'Edit Worker';
+            document.querySelector('[name="name"]').value = worker.name;
+            document.querySelector('[name="phone"]').value = worker.phone;
+            document.querySelector('[name="email"]').value = worker.email;
+            document.querySelector('[name="password"]').required = false;
+            document.querySelector('[name="password"]').value = '';
+            
+            new bootstrap.Modal(document.getElementById('workerModal')).show();
         }
         
         async function deleteWorker(id) {
@@ -151,13 +173,26 @@
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
             
+            // Remove password if empty (for edit)
+            if (!data.password) {
+                delete data.password;
+            }
+            
             try {
-                await axios.post('/workers', data);
-                showAlert('Worker added successfully', 'success');
+                if (editingWorkerId) {
+                    // Update existing worker
+                    await axios.put(`/workers/${editingWorkerId}`, data);
+                    showAlert('Worker updated successfully', 'success');
+                } else {
+                    // Add new worker
+                    await axios.post('/workers', data);
+                    showAlert('Worker added successfully', 'success');
+                }
                 bootstrap.Modal.getInstance(document.getElementById('workerModal')).hide();
                 loadWorkers();
+                resetForm();
             } catch (error) {
-                showAlert(error.response?.data?.message || 'Error adding worker', 'danger');
+                showAlert(error.response?.data?.message || 'Error saving worker', 'danger');
             }
         });
         

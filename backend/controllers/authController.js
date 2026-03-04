@@ -268,3 +268,67 @@ exports.forgotPassword = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };
+
+// Direct Password Reset (for User/Worker without OTP)
+exports.directResetPassword = async (req, res) => {
+    try {
+        const { phone, email, newPassword, confirmPassword, role } = req.body;
+        
+        // Validate role (only user and worker allowed for direct reset)
+        if (!['worker', 'user'].includes(role)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Direct password reset is only available for users and workers' 
+            });
+        }
+        
+        // Validate passwords match
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ success: false, message: 'Passwords do not match' });
+        }
+        
+        // Validate password length
+        if (newPassword.length < 6) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Password must be at least 6 characters' 
+            });
+        }
+        
+        // Determine table based on role
+        let table = role === 'worker' ? 'workers' : 'users';
+        
+        // Check if user exists with phone and email
+        const [records] = await db.query(
+            `SELECT * FROM ${table} WHERE phone = $1 AND email = $2`,
+            [phone, email]
+        );
+        
+        if (records.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'No account found with this phone and email combination' 
+            });
+        }
+        
+        // Update password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        
+        await db.query(
+            `UPDATE ${table} SET password = $1 WHERE phone = $2 AND email = $3`,
+            [hashedPassword, phone, email]
+        );
+        
+        res.json({ 
+            success: true, 
+            message: 'Password reset successfully. You can now login with your new password.' 
+        });
+    } catch (error) {
+        console.error('Direct reset password error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Failed to reset password. Please try again.',
+            error: error.message 
+        });
+    }
+};
