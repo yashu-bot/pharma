@@ -1,13 +1,16 @@
-const axios = require('axios');
+const { Resend } = require('resend');
+
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Send OTP Email
 exports.sendOTPEmail = async (email, otp, userName) => {
     try {
-        const response = await axios.post('https://api.brevo.com/v3/smtp/email', {
-            sender: { name: 'Pharma Management', email: 'noreply@pharma.com' },
-            to: [{ email: email }],
+        const { data, error } = await resend.emails.send({
+            from: 'Pharma Management <onboarding@resend.dev>',
+            to: email,
             subject: 'Password Reset OTP - Pharma Management',
-            htmlContent: `
+            html: `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -56,17 +59,17 @@ exports.sendOTPEmail = async (email, otp, userName) => {
                 </body>
                 </html>
             `
-        }, {
-            headers: {
-                'api-key': process.env.BREVO_API_KEY,
-                'Content-Type': 'application/json'
-            }
         });
 
-        console.log('OTP Email sent via Brevo:', response.data.messageId);
-        return { success: true, messageId: response.data.messageId };
+        if (error) {
+            console.error('Resend error:', error);
+            throw new Error('Failed to send OTP email');
+        }
+
+        console.log('OTP Email sent via Resend:', data.id);
+        return { success: true, messageId: data.id };
     } catch (error) {
-        console.error('Error sending OTP email via Brevo:', error.response?.data || error.message);
+        console.error('Error sending OTP email via Resend:', error);
         throw new Error('Failed to send OTP email');
     }
 };
