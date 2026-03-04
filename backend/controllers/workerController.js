@@ -24,7 +24,52 @@ exports.addWorker = async (req, res) => {
         
         res.json({ success: true, message: 'Worker added successfully', id: result.insertId });
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === 'ER_DUP_ENTRY' || error.code === '23505') {
+            return res.status(400).json({ success: false, message: 'Phone or email already exists' });
+        }
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+};
+
+// Update Worker
+exports.updateWorker = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, phone, email, password } = req.body;
+        
+        // Build update query dynamically based on provided fields
+        let updateFields = [];
+        let values = [];
+        
+        if (name) {
+            updateFields.push('name = ?');
+            values.push(name);
+        }
+        if (phone) {
+            updateFields.push('phone = ?');
+            values.push(phone);
+        }
+        if (email) {
+            updateFields.push('email = ?');
+            values.push(email);
+        }
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updateFields.push('password = ?');
+            values.push(hashedPassword);
+        }
+        
+        if (updateFields.length === 0) {
+            return res.status(400).json({ success: false, message: 'No fields to update' });
+        }
+        
+        values.push(id);
+        const sql = `UPDATE workers SET ${updateFields.join(', ')} WHERE id = ?`;
+        
+        await db.query(sql, values);
+        res.json({ success: true, message: 'Worker updated successfully' });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY' || error.code === '23505') {
             return res.status(400).json({ success: false, message: 'Phone or email already exists' });
         }
         res.status(500).json({ success: false, message: 'Server error', error: error.message });

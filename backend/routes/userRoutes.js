@@ -17,6 +17,15 @@ router.post('/', auth(['admin']), [
     validate
 ], userController.addUser);
 
+router.put('/:id', auth(['admin']), [
+    body('medical_name').optional().notEmpty().withMessage('Medical name cannot be empty'),
+    body('owner_name').optional().notEmpty().withMessage('Owner name cannot be empty'),
+    body('phone').optional().notEmpty().withMessage('Phone cannot be empty'),
+    body('email').optional().isEmail().withMessage('Valid email is required'),
+    body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    validate
+], userController.updateUser);
+
 router.delete('/:id', auth(['admin']), userController.deleteUser);
 
 // Worker route for searching users

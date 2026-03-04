@@ -24,7 +24,60 @@ exports.addUser = async (req, res) => {
         
         res.json({ success: true, message: 'User added successfully', id: result.insertId });
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
+        if (error.code === 'ER_DUP_ENTRY' || error.code === '23505') {
+            return res.status(400).json({ success: false, message: 'Phone or email already exists' });
+        }
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+};
+
+// Update User
+exports.updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { medical_name, owner_name, phone, email, address, password } = req.body;
+        
+        // Build update query dynamically based on provided fields
+        let updateFields = [];
+        let values = [];
+        
+        if (medical_name) {
+            updateFields.push('medical_name = ?');
+            values.push(medical_name);
+        }
+        if (owner_name) {
+            updateFields.push('owner_name = ?');
+            values.push(owner_name);
+        }
+        if (phone) {
+            updateFields.push('phone = ?');
+            values.push(phone);
+        }
+        if (email) {
+            updateFields.push('email = ?');
+            values.push(email);
+        }
+        if (address !== undefined) {
+            updateFields.push('address = ?');
+            values.push(address);
+        }
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            updateFields.push('password = ?');
+            values.push(hashedPassword);
+        }
+        
+        if (updateFields.length === 0) {
+            return res.status(400).json({ success: false, message: 'No fields to update' });
+        }
+        
+        values.push(id);
+        const sql = `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`;
+        
+        await db.query(sql, values);
+        res.json({ success: true, message: 'User updated successfully' });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY' || error.code === '23505') {
             return res.status(400).json({ success: false, message: 'Phone or email already exists' });
         }
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
