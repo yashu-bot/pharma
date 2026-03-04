@@ -17,13 +17,14 @@ exports.addWorker = async (req, res) => {
         const { name, phone, email, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        const [result] = await db.query(
+        await db.query(
             'INSERT INTO workers (name, phone, email, password) VALUES (?, ?, ?, ?)',
             [name, phone, email, hashedPassword]
         );
         
-        res.json({ success: true, message: 'Worker added successfully', id: result.insertId });
+        res.json({ success: true, message: 'Worker added successfully' });
     } catch (error) {
+        console.error('Add worker error:', error);
         if (error.code === 'ER_DUP_ENTRY' || error.code === '23505') {
             return res.status(400).json({ success: false, message: 'Phone or email already exists' });
         }

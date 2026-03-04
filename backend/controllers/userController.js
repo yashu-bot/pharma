@@ -17,13 +17,14 @@ exports.addUser = async (req, res) => {
         const { medical_name, owner_name, phone, email, address, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         
-        const [result] = await db.query(
+        await db.query(
             'INSERT INTO users (medical_name, owner_name, phone, email, address, password) VALUES (?, ?, ?, ?, ?, ?)',
             [medical_name, owner_name, phone, email, address, hashedPassword]
         );
         
-        res.json({ success: true, message: 'User added successfully', id: result.insertId });
+        res.json({ success: true, message: 'User added successfully' });
     } catch (error) {
+        console.error('Add user error:', error);
         if (error.code === 'ER_DUP_ENTRY' || error.code === '23505') {
             return res.status(400).json({ success: false, message: 'Phone or email already exists' });
         }
