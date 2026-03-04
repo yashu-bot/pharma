@@ -12,6 +12,11 @@ async function loadProductMaster() {
         
         const productNameSelect = document.getElementById('productNameSelect');
         if (productNameSelect) {
+            // Destroy existing Select2 instance if it exists
+            if ($(productNameSelect).data('select2')) {
+                $(productNameSelect).select2('destroy');
+            }
+            
             productNameSelect.innerHTML = '<option value="">Select Product</option>' + 
                 productMasterList.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
             
@@ -20,11 +25,13 @@ async function loadProductMaster() {
                 theme: 'bootstrap-5',
                 placeholder: 'Search and select product',
                 allowClear: true,
-                dropdownParent: $('#productModal')
+                dropdownParent: $('#productModal'),
+                width: '100%'
             });
         }
     } catch (error) {
         console.error('Error loading product master:', error);
+        showAlert('Error loading product list. Please refresh the page.', 'danger');
     }
 }
 
@@ -111,8 +118,13 @@ function resetForm() {
     document.getElementById('productForm').reset();
     document.getElementById('productId').value = '';
     document.getElementById('discount_percentage').value = '';
-    document.getElementById('modalTitle').textContent = 'Add Product';
-    loadProductMaster(); // Reload product master list
+    document.getElementById('modalTitle').textContent = 'Add Stock';
+    
+    // Reset Select2
+    const productNameSelect = $('#productNameSelect');
+    if (productNameSelect.data('select2')) {
+        productNameSelect.val('').trigger('change');
+    }
 }
 
 function editProduct(id) {
@@ -187,6 +199,9 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
     }
 });
 
-loadSections();
-loadProducts();
-loadProductMaster();
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadSections();
+    loadProducts();
+    loadProductMaster();
+});
