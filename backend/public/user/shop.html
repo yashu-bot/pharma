@@ -113,20 +113,48 @@
             }
             
             container.innerHTML = products.map(p => {
-                const isExpiringSoon = p.expiry_status === 'expiring_soon';
+                const isAvailable = p.availability_status === 'available' || p.availability_status === 'expiring_soon';
+                const isExpiringSoon = p.availability_status === 'expiring_soon';
+                const isNotAvailable = p.availability_status === 'not_available';
+                const isOutOfStock = p.availability_status === 'out_of_stock';
+                const isExpired = p.availability_status === 'expired';
+                
+                let statusBadge = '';
+                let statusMessage = '';
+                
+                if (isNotAvailable) {
+                    statusBadge = '<span class="badge bg-secondary mb-2">Not Available</span>';
+                    statusMessage = '<p class="text-muted">This product has not been added to stock yet</p>';
+                } else if (isExpired) {
+                    statusBadge = '<span class="badge bg-danger mb-2">Expired</span>';
+                    statusMessage = '<p class="text-danger">This product has expired</p>';
+                } else if (isOutOfStock) {
+                    statusBadge = '<span class="badge bg-warning mb-2">Out of Stock</span>';
+                    statusMessage = '<p class="text-warning">Currently out of stock</p>';
+                } else if (isExpiringSoon) {
+                    statusBadge = '<span class="badge bg-warning mb-2">⚠️ Expiring Soon</span>';
+                }
+                
                 return `
                     <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card h-100">
+                        <div class="card h-100 ${!isAvailable ? 'opacity-75' : ''}">
                             <div class="card-body text-center">
                                 <h5 class="card-title fw-bold">${p.product_name}</h5>
                                 ${p.mg ? `<p class="text-muted mb-2">${p.mg}</p>` : ''}
-                                <p class="mb-2"><strong>Price:</strong> <span class="text-primary fs-5">${formatCurrency(p.selling_price)}</span></p>
-                                ${p.scheme ? `<p class="text-success mb-2"><i class="fas fa-gift"></i> Buy ${p.scheme} Get 1 FREE!</p>` : ''}
-                                <p class="mb-3"><small>Stock: ${p.stock_quantity}</small></p>
-                                ${isExpiringSoon ? '<span class="badge bg-warning mb-2">⚠️ Expiring Soon</span><br>' : ''}
-                                <button class="btn btn-primary w-100" onclick="addToCart(${p.id}, '${p.product_name}', ${p.selling_price}, ${p.stock_quantity})">
-                                    <i class="fas fa-cart-plus"></i> Add to Cart
-                                </button>
+                                ${statusBadge}
+                                ${isAvailable ? `
+                                    <p class="mb-2"><strong>Price:</strong> <span class="text-primary fs-5">${formatCurrency(p.selling_price)}</span></p>
+                                    ${p.scheme ? `<p class="text-success mb-2"><i class="fas fa-gift"></i> Buy ${p.scheme} Get 1 FREE!</p>` : ''}
+                                    <p class="mb-3"><small>Stock: ${p.stock_quantity}</small></p>
+                                    <button class="btn btn-primary w-100" onclick="addToCart(${p.stock_id}, '${p.product_name}', ${p.selling_price}, ${p.stock_quantity})">
+                                        <i class="fas fa-cart-plus"></i> Add to Cart
+                                    </button>
+                                ` : `
+                                    ${statusMessage}
+                                    <button class="btn btn-secondary w-100" disabled>
+                                        <i class="fas fa-ban"></i> Not Available
+                                    </button>
+                                `}
                             </div>
                         </div>
                     </div>
