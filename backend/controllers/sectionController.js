@@ -14,10 +14,11 @@ exports.getAllSections = async (req, res) => {
 exports.addSection = async (req, res) => {
     try {
         const { name } = req.body;
-        const [result] = await db.query('INSERT INTO sections (name) VALUES (?)', [name]);
-        res.json({ success: true, message: 'Section added successfully', id: result.insertId });
+        await db.query('INSERT INTO sections (name) VALUES (?)', [name]);
+        res.json({ success: true, message: 'Section added successfully' });
     } catch (error) {
-        if (error.code === 'ER_DUP_ENTRY') {
+        console.error('Add section error:', error);
+        if (error.code === 'ER_DUP_ENTRY' || error.code === '23505') {
             return res.status(400).json({ success: false, message: 'Section already exists' });
         }
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -32,6 +33,10 @@ exports.updateSection = async (req, res) => {
         await db.query('UPDATE sections SET name = ? WHERE id = ?', [name, id]);
         res.json({ success: true, message: 'Section updated successfully' });
     } catch (error) {
+        console.error('Update section error:', error);
+        if (error.code === 'ER_DUP_ENTRY' || error.code === '23505') {
+            return res.status(400).json({ success: false, message: 'Section name already exists' });
+        }
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };
