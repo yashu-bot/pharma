@@ -76,5 +76,29 @@ if (isPostgres) {
     });
 
     const promisePool = pool.promise();
+    
+    // Add getConnection method for MySQL
+    promisePool.getConnection = async () => {
+        const connection = await pool.promise().getConnection();
+        return {
+            query: async (sql, params) => {
+                const [rows, fields] = await connection.query(sql, params);
+                return [rows, fields];
+            },
+            beginTransaction: async () => {
+                await connection.beginTransaction();
+            },
+            commit: async () => {
+                await connection.commit();
+            },
+            rollback: async () => {
+                await connection.rollback();
+            },
+            release: () => {
+                connection.release();
+            }
+        };
+    };
+    
     module.exports = promisePool;
 }
