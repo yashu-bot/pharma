@@ -3,6 +3,17 @@ checkAuth('admin');
 let sections = [];
 let products = [];
 
+// Calculate selling price based on MRP and discount percentage
+function calculateSellingPrice() {
+    const mrp = parseFloat(document.getElementById('mrp_per_sheet').value) || 0;
+    const discount = parseFloat(document.getElementById('discount_percentage').value) || 0;
+    
+    if (mrp > 0 && discount >= 0) {
+        const sellingPrice = mrp - (mrp * discount / 100);
+        document.getElementById('selling_price').value = sellingPrice.toFixed(2);
+    }
+}
+
 async function loadSections() {
     try {
         const response = await axios.get('/sections');
@@ -74,6 +85,7 @@ async function loadProducts() {
 function resetForm() {
     document.getElementById('productForm').reset();
     document.getElementById('productId').value = '';
+    document.getElementById('discount_percentage').value = '';
     document.getElementById('modalTitle').textContent = 'Add Product';
 }
 
@@ -95,6 +107,12 @@ function editProduct(id) {
     form.exp_date.value = product.exp_date.split('T')[0];
     form.batch_number.value = product.batch_number;
     form.stock_quantity.value = product.stock_quantity;
+    
+    // Calculate and show discount percentage
+    if (product.mrp_per_sheet > 0 && product.selling_price > 0) {
+        const discount = ((product.mrp_per_sheet - product.selling_price) / product.mrp_per_sheet * 100).toFixed(2);
+        document.getElementById('discount_percentage').value = discount;
+    }
     
     new bootstrap.Modal(document.getElementById('productModal')).show();
 }

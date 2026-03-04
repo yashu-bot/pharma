@@ -98,11 +98,17 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">MRP per Sheet</label>
-                                <input type="number" step="0.01" class="form-control" name="mrp_per_sheet" required>
+                                <input type="number" step="0.01" class="form-control" id="mrp_per_sheet" name="mrp_per_sheet" required onchange="calculateSellingPrice()">
                             </div>
                             <div class="col-md-6 mb-3">
+                                <label class="form-label">Discount %</label>
+                                <input type="number" step="0.01" class="form-control" id="discount_percentage" placeholder="e.g., 10 for 10% off" min="0" max="100" onchange="calculateSellingPrice()">
+                                <small class="text-muted">Enter discount percentage to auto-calculate selling price</small>
+                            </div>
+                            <div class="col-md-12 mb-3">
                                 <label class="form-label">Selling Price</label>
-                                <input type="number" step="0.01" class="form-control" name="selling_price" required>
+                                <input type="number" step="0.01" class="form-control" id="selling_price" name="selling_price" required>
+                                <small class="text-muted">Auto-calculated from MRP and discount, or enter manually</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Scheme (Optional)</label>
@@ -114,16 +120,16 @@
                                 <select class="form-select" name="section_id" required id="sectionSelect"></select>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">MFG Date</label>
-                                <input type="date" class="form-control" name="mfg_date" required>
+                                <label class="form-label">MFG Date (Optional)</label>
+                                <input type="date" class="form-control" name="mfg_date">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">EXP Date</label>
-                                <input type="date" class="form-control" name="exp_date" required>
+                                <label class="form-label">EXP Date (Optional)</label>
+                                <input type="date" class="form-control" name="exp_date">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Batch Number</label>
-                                <input type="text" class="form-control" name="batch_number" required>
+                                <label class="form-label">Batch Number (Optional)</label>
+                                <input type="text" class="form-control" name="batch_number">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Stock Quantity</label>
