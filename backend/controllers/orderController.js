@@ -233,9 +233,12 @@ exports.updateOrderStatus = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
         
-        await db.query('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
+        console.log('Updating order status:', { id, status });
+        
+        await db.query('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
         res.json({ success: true, message: 'Order status updated successfully' });
     } catch (error) {
+        console.error('Update status error:', error);
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };
