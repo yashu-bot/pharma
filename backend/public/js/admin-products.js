@@ -2,6 +2,31 @@ checkAuth('admin');
 
 let sections = [];
 let products = [];
+let productMasterList = [];
+
+// Load product master list for dropdown
+async function loadProductMaster() {
+    try {
+        const response = await axios.get('/product-master');
+        productMasterList = response.data.data;
+        
+        const productNameSelect = document.getElementById('productNameSelect');
+        if (productNameSelect) {
+            productNameSelect.innerHTML = '<option value="">Select Product</option>' + 
+                productMasterList.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+            
+            // Initialize Select2 with search functionality
+            $(productNameSelect).select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Search and select product',
+                allowClear: true,
+                dropdownParent: $('#productModal')
+            });
+        }
+    } catch (error) {
+        console.error('Error loading product master:', error);
+    }
+}
 
 // Calculate selling price based on MRP and discount percentage
 function calculateSellingPrice() {
@@ -87,6 +112,7 @@ function resetForm() {
     document.getElementById('productId').value = '';
     document.getElementById('discount_percentage').value = '';
     document.getElementById('modalTitle').textContent = 'Add Product';
+    loadProductMaster(); // Reload product master list
 }
 
 function editProduct(id) {
@@ -97,15 +123,18 @@ function editProduct(id) {
     document.getElementById('modalTitle').textContent = 'Edit Product';
     
     const form = document.getElementById('productForm');
-    form.product_name.value = product.product_name;
+    
+    // Set Select2 value for product name
+    $('#productNameSelect').val(product.product_name).trigger('change');
+    
     form.mg.value = product.mg || '';
     form.mrp_per_sheet.value = product.mrp_per_sheet;
     form.selling_price.value = product.selling_price;
     form.scheme.value = product.scheme || '';
     form.section_id.value = product.section_id;
-    form.mfg_date.value = product.mfg_date.split('T')[0];
-    form.exp_date.value = product.exp_date.split('T')[0];
-    form.batch_number.value = product.batch_number;
+    form.mfg_date.value = product.mfg_date ? product.mfg_date.split('T')[0] : '';
+    form.exp_date.value = product.exp_date ? product.exp_date.split('T')[0] : '';
+    form.batch_number.value = product.batch_number || '';
     form.stock_quantity.value = product.stock_quantity;
     
     // Calculate and show discount percentage
@@ -135,6 +164,13 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
     const data = Object.fromEntries(formData);
     const id = document.getElementById('productId').value;
     
+    // Remove empty optional fields to avoid validation errors
+    if (!data.mg || data.mg.trim() === '') delete data.mg;
+    if (!data.scheme || data.scheme.trim() === '') delete data.scheme;
+    if (!data.mfg_date || data.mfg_date.trim() === '') delete data.mfg_date;
+    if (!data.exp_date || data.exp_date.trim() === '') delete data.exp_date;
+    if (!data.batch_number || data.batch_number.trim() === '') delete data.batch_number;
+    
     try {
         if (id) {
             await axios.put(`/products/${id}`, data);
@@ -153,3 +189,4 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
 
 loadSections();
 loadProducts();
+loadProductMaster();
