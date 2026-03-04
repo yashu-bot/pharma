@@ -45,14 +45,13 @@ exports.getAvailableProducts = async (req, res) => {
     try {
         const { section_id } = req.query;
         
-        // First, get all products from stock (products table)
+        // Get all products from stock (products table) - these are available
         let stockQuery = `
             SELECT 
                 p.id,
                 p.product_name,
                 p.section_id,
                 s.name as section_name,
-                p.id as stock_id,
                 p.mg,
                 p.mrp_per_sheet,
                 p.selling_price,
@@ -70,14 +69,13 @@ exports.getAvailableProducts = async (req, res) => {
             WHERE 1=1
         `;
         
-        // Then get products from product_master that are NOT in stock
+        // Get products from product_master that are NOT in stock - these are not available
         let masterQuery = `
             SELECT 
                 pm.id,
                 pm.name as product_name,
                 pm.section_id,
                 s.name as section_name,
-                NULL as stock_id,
                 NULL as mg,
                 NULL as mrp_per_sheet,
                 NULL as selling_price,
@@ -93,14 +91,15 @@ exports.getAvailableProducts = async (req, res) => {
         `;
         
         const params = [];
+        let paramIndex = 1;
         
         if (section_id) {
-            stockQuery += ' AND p.section_id = $' + (params.length + 1);
-            masterQuery += ' AND pm.section_id = $' + (params.length + 1);
+            stockQuery += ' AND p.section_id = $' + paramIndex;
+            masterQuery += ' AND pm.section_id = $' + paramIndex;
             params.push(section_id);
         }
         
-        // Combine both queries with UNION
+        // Combine both queries with UNION ALL
         const query = `(${stockQuery}) UNION ALL (${masterQuery}) ORDER BY product_name`;
         
         const [products] = await db.query(query, params);
