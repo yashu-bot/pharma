@@ -6,6 +6,8 @@
     <title>Products - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -47,7 +49,12 @@
         <div class="card">
             <div class="card-body">
                 <div class="row mb-3">
-                    <div class="col-md-12">
+                    <div class="col-md-6">
+                        <select class="form-select" id="sectionFilter" onchange="loadProducts()">
+                            <option value="">All Sections</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
                         <input type="text" class="form-control" id="searchInput" placeholder="Search products..." onkeyup="loadProducts()">
                     </div>
                 </div>
@@ -56,6 +63,7 @@
                         <thead>
                             <tr>
                                 <th>Product Name</th>
+                                <th>Section</th>
                                 <th>Created Date</th>
                                 <th>Actions</th>
                             </tr>
@@ -79,6 +87,12 @@
                     <div class="modal-body">
                         <input type="hidden" id="productId">
                         <div class="mb-3">
+                            <label class="form-label">Section</label>
+                            <select class="form-select" name="section_id" id="sectionSelect" required>
+                                <option value="">Select Section</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Product Name</label>
                             <input type="text" class="form-control" name="name" required>
                         </div>
@@ -93,18 +107,49 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="../js/config.js"></script>
     <script>
         checkAuth('admin');
         
         let products = [];
+        let sections = [];
+        
+        async function loadSections() {
+            try {
+                const response = await axios.get('/sections');
+                sections = response.data.data;
+                
+                const sectionFilter = document.getElementById('sectionFilter');
+                const sectionSelect = document.getElementById('sectionSelect');
+                
+                sectionFilter.innerHTML = '<option value="">All Sections</option>' + 
+                    sections.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                
+                sectionSelect.innerHTML = '<option value="">Select Section</option>' + 
+                    sections.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                
+                // Initialize Select2 for section select
+                $('#sectionSelect').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Search and select section',
+                    allowClear: true,
+                    dropdownParent: $('#productModal'),
+                    width: '100%'
+                });
+            } catch (error) {
+                console.error('Error loading sections:', error);
+            }
+        }
         
         async function loadProducts() {
             try {
                 const search = document.getElementById('searchInput').value;
+                const section_id = document.getElementById('sectionFilter').value;
                 const response = await axios.get('/product-master', {
-                    params: { search }
+                    params: { search, section_id }
                 });
                 products = response.data.data;
                 
@@ -112,6 +157,7 @@
                 tbody.innerHTML = products.map(p => `
                     <tr>
                         <td>${p.name}</td>
+                        <td>${p.section_name || '-'}</td>
                         <td>${formatDate(p.created_at)}</td>
                         <td>
                             <button class="btn btn-sm btn-warning" onclick="editProduct(${p.id})">
@@ -132,6 +178,9 @@
             document.getElementById('productForm').reset();
             document.getElementById('productId').value = '';
             document.getElementById('modalTitle').textContent = 'Add Product';
+            
+            // Reset Select2
+            $('#sectionSelect').val('').trigger('change');
         }
         
         function editProduct(id) {
@@ -141,6 +190,7 @@
             document.getElementById('productId').value = product.id;
             document.getElementById('modalTitle').textContent = 'Edit Product';
             document.querySelector('[name="name"]').value = product.name;
+            $('#sectionSelect').val(product.section_id).trigger('change');
             
             new bootstrap.Modal(document.getElementById('productModal')).show();
         }
@@ -179,7 +229,10 @@
             }
         });
         
-        loadProducts();
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSections();
+            loadProducts();
+        });
     </script>
 </body>
 </html>

@@ -3,16 +3,21 @@ const db = require('../config/database');
 // Get All Product Masters
 exports.getAllProductMasters = async (req, res) => {
     try {
-        const { search } = req.query;
-        let query = 'SELECT * FROM product_master';
+        const { search, section_id } = req.query;
+        let query = 'SELECT pm.*, s.name as section_name FROM product_master pm LEFT JOIN sections s ON pm.section_id = s.id WHERE 1=1';
         const params = [];
         
         if (search) {
-            query += ' WHERE name ILIKE ?';
+            query += ' AND pm.name ILIKE ?';
             params.push(`%${search}%`);
         }
         
-        query += ' ORDER BY name';
+        if (section_id) {
+            query += ' AND pm.section_id = ?';
+            params.push(section_id);
+        }
+        
+        query += ' ORDER BY pm.name';
         
         const [products] = await db.query(query, params);
         res.json({ success: true, data: products });
@@ -25,8 +30,8 @@ exports.getAllProductMasters = async (req, res) => {
 // Add Product Master
 exports.addProductMaster = async (req, res) => {
     try {
-        const { name } = req.body;
-        await db.query('INSERT INTO product_master (name) VALUES (?)', [name]);
+        const { name, section_id } = req.body;
+        await db.query('INSERT INTO product_master (name, section_id) VALUES (?, ?)', [name, section_id || null]);
         res.json({ success: true, message: 'Product added successfully' });
     } catch (error) {
         console.error('Add product master error:', error);
@@ -41,8 +46,8 @@ exports.addProductMaster = async (req, res) => {
 exports.updateProductMaster = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name } = req.body;
-        await db.query('UPDATE product_master SET name = ? WHERE id = ?', [name, id]);
+        const { name, section_id } = req.body;
+        await db.query('UPDATE product_master SET name = ?, section_id = ? WHERE id = ?', [name, section_id || null, id]);
         res.json({ success: true, message: 'Product updated successfully' });
     } catch (error) {
         console.error('Update product master error:', error);

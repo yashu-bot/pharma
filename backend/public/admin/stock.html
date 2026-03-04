@@ -92,11 +92,15 @@
                         <input type="hidden" id="productId">
                         <div class="row">
                             <div class="col-md-6 mb-3">
+                                <label class="form-label">Section</label>
+                                <select class="form-select" name="section_id" required id="sectionSelect" onchange="loadProductMaster()"></select>
+                                <small class="text-muted">Select section first to see products</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Product Name</label>
                                 <select class="form-select" name="product_name" id="productNameSelect" required>
-                                    <option value="">Select Product</option>
+                                    <option value="">Select Section First</option>
                                 </select>
-                                <small class="text-muted">Add products in the Products page first</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">MG (Optional)</label>
@@ -123,7 +127,8 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Section</label>
-                                <select class="form-select" name="section_id" required id="sectionSelect"></select>
+                                <select class="form-select" name="section_id" required id="sectionSelect" onchange="loadProductMaster()"></select>
+                                <small class="text-muted">Select section first to see products</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">MFG Date (Optional)</label>

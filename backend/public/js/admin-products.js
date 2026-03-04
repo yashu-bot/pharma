@@ -7,7 +7,12 @@ let productMasterList = [];
 // Load product master list for dropdown
 async function loadProductMaster() {
     try {
-        const response = await axios.get('/product-master');
+        // Get selected section from the section dropdown in the form
+        const sectionId = document.getElementById('sectionSelect')?.value || '';
+        
+        const response = await axios.get('/product-master', {
+            params: { section_id: sectionId }
+        });
         productMasterList = response.data.data;
         
         const productNameSelect = document.getElementById('productNameSelect');
@@ -17,8 +22,12 @@ async function loadProductMaster() {
                 $(productNameSelect).select2('destroy');
             }
             
-            productNameSelect.innerHTML = '<option value="">Select Product</option>' + 
-                productMasterList.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+            if (productMasterList.length === 0) {
+                productNameSelect.innerHTML = '<option value="">No products in this section</option>';
+            } else {
+                productNameSelect.innerHTML = '<option value="">Select Product</option>' + 
+                    productMasterList.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+            }
             
             // Initialize Select2 with search functionality
             $(productNameSelect).select2({
@@ -120,11 +129,14 @@ function resetForm() {
     document.getElementById('discount_percentage').value = '';
     document.getElementById('modalTitle').textContent = 'Add Stock';
     
-    // Reset Select2
+    // Reset Select2 for product name
     const productNameSelect = $('#productNameSelect');
     if (productNameSelect.data('select2')) {
         productNameSelect.val('').trigger('change');
     }
+    
+    // Reset product dropdown to show "Select Section First"
+    document.getElementById('productNameSelect').innerHTML = '<option value="">Select Section First</option>';
 }
 
 function editProduct(id) {
@@ -136,9 +148,6 @@ function editProduct(id) {
     
     const form = document.getElementById('productForm');
     
-    // Set Select2 value for product name
-    $('#productNameSelect').val(product.product_name).trigger('change');
-    
     form.mg.value = product.mg || '';
     form.mrp_per_sheet.value = product.mrp_per_sheet;
     form.selling_price.value = product.selling_price;
@@ -148,6 +157,11 @@ function editProduct(id) {
     form.exp_date.value = product.exp_date ? product.exp_date.split('T')[0] : '';
     form.batch_number.value = product.batch_number || '';
     form.stock_quantity.value = product.stock_quantity;
+    
+    // Load products for the selected section, then set the product name
+    loadProductMaster().then(() => {
+        $('#productNameSelect').val(product.product_name).trigger('change');
+    });
     
     // Calculate and show discount percentage
     if (product.mrp_per_sheet > 0 && product.selling_price > 0) {
@@ -203,5 +217,4 @@ document.getElementById('productForm').addEventListener('submit', async (e) => {
 document.addEventListener('DOMContentLoaded', function() {
     loadSections();
     loadProducts();
-    loadProductMaster();
 });
