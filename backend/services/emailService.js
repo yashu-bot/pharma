@@ -1,10 +1,20 @@
 const { Resend } = require('resend');
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend only if API key is available
+let resend = null;
+if (process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+} else {
+    console.warn('RESEND_API_KEY not configured. Email functionality will be disabled.');
+}
 
 // Send OTP Email
 exports.sendOTPEmail = async (email, otp, userName) => {
+    if (!resend) {
+        console.error('Email service not configured. Cannot send OTP.');
+        throw new Error('Email service not configured');
+    }
+    
     try {
         const { data, error } = await resend.emails.send({
             from: 'Pharma Management <onboarding@resend.dev>',
