@@ -11,11 +11,8 @@ exports.placeOrder = async (req, res) => {
         const order_type = req.user.role;
         const worker_id = req.user.role === 'worker' ? req.user.id : null;
         
-        console.log('Place order request:', { items, user_id, order_type, worker_id });
-        
         // Get GST settings
         const [gstSettings] = await connection.query('SELECT sgst_percentage, cgst_percentage FROM admin LIMIT 1');
-        console.log('GST settings:', gstSettings);
         
         if (!gstSettings || gstSettings.length === 0) {
             await connection.rollback();
@@ -29,7 +26,6 @@ exports.placeOrder = async (req, res) => {
         const validatedItems = [];
         
         for (const item of items) {
-            console.log('Processing item:', item);
             const [products] = await connection.query('SELECT * FROM products WHERE id = ? FOR UPDATE', [item.product_id]);
             
             if (products.length === 0) {
@@ -38,7 +34,6 @@ exports.placeOrder = async (req, res) => {
             }
             
             const product = products[0];
-            console.log('Product found:', product);
             
             // Check expiry
             if (new Date(product.exp_date) < new Date()) {
@@ -88,14 +83,10 @@ exports.placeOrder = async (req, res) => {
             });
         }
         
-        console.log('Validated items:', validatedItems);
-        
         // Calculate GST
         const sgst_amount = (subtotal * sgst_percentage) / 100;
         const cgst_amount = (subtotal * cgst_percentage) / 100;
         const grand_total = subtotal + sgst_amount + cgst_amount;
-        
-        console.log('Order totals:', { subtotal, sgst_amount, cgst_amount, grand_total });
         
         // Insert order
         let order_id;
@@ -103,8 +94,6 @@ exports.placeOrder = async (req, res) => {
             'INSERT INTO orders (user_id, worker_id, order_type, subtotal, sgst_amount, cgst_amount, sgst_percentage, cgst_percentage, grand_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [user_id, worker_id, order_type, subtotal, sgst_amount, cgst_amount, sgst_percentage, cgst_percentage, grand_total]
         );
-        
-        console.log('Order insert result:', orderResult);
         
         // Get the inserted order ID
         if (orderResult.id) {
@@ -119,8 +108,6 @@ exports.placeOrder = async (req, res) => {
             order_id = lastOrder[0].id;
         }
         
-        console.log('Order ID:', order_id);
-        
         // Insert order items and update stock
         for (const item of validatedItems) {
             await connection.query(
@@ -132,8 +119,6 @@ exports.placeOrder = async (req, res) => {
         }
         
         await connection.commit();
-        
-        console.log('Order placed successfully:', order_id);
         
         res.json({ 
             success: true, 
@@ -264,12 +249,9 @@ exports.updateOrderStatus = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
         
-        console.log('Updating order status:', { id, status });
-        
         await db.query('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
         res.json({ success: true, message: 'Order status updated successfully' });
     } catch (error) {
-        console.error('Update status error:', error);
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };
