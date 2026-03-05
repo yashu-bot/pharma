@@ -40,28 +40,45 @@ exports.getAllProducts = async (req, res) => {
     }
 };
 
-// Get Products for User/Worker (Hide Expired)
+// Get Products for User/Worker (Shows all products from product_master with availability status)
 exports.getAvailableProducts = async (req, res) => {
     try {
         const { section_id } = req.query;
         let query = `
-            SELECT p.*, s.name as section_name,
-            CASE 
-                WHEN p.exp_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'expiring_soon'
-                ELSE 'valid'
-            END as expiry_status
-            FROM products p 
-            JOIN sections s ON p.section_id = s.id
-            WHERE p.exp_date >= CURRENT_DATE AND p.stock_quantity > 0
+            SELECT 
+                pm.id as master_id,
+                pm.product_name,
+                pm.section_id,
+                s.name as section_name,
+                p.id,
+                p.mg,
+                p.mrp_per_sheet,
+                p.selling_price,
+                p.scheme,
+                p.mfg_date,
+                p.exp_date,
+                p.batch_number,
+                p.stock_quantity,
+                CASE 
+                    WHEN p.id IS NULL THEN 'not_available'
+                    WHEN p.stock_quantity = 0 THEN 'out_of_stock'
+                    WHEN p.exp_date < CURRENT_DATE THEN 'expired'
+                    WHEN p.exp_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'expiring_soon'
+                    ELSE 'available'
+                END as availability_status
+            FROM product_master pm
+            JOIN sections s ON pm.section_id = s.id
+            LEFT JOIN products p ON pm.product_name = p.product_name AND pm.section_id = p.section_id
+            WHERE 1=1
         `;
         const params = [];
         
         if (section_id) {
-            query += ' AND p.section_id = $' + (params.length + 1);
+            query += ' AND pm.section_id = $' + (params.length + 1);
             params.push(section_id);
         }
         
-        query += ' ORDER BY p.product_name';
+        query += ' ORDER BY pm.product_name';
         
         const [products] = await db.query(query, params);
         res.json({ success: true, data: products });
