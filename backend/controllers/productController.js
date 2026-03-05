@@ -40,15 +40,15 @@ exports.getAllProducts = async (req, res) => {
     }
 };
 
-// Get Products for User/Worker (Shows all products from product_master with availability status)
+// Get Products for User/Worker (Shows products from stock with availability status)
 exports.getAvailableProducts = async (req, res) => {
     try {
         const { section_id } = req.query;
         let query = `
             SELECT 
-                COALESCE(p.id, pm.id) as id,
-                pm.product_name,
-                pm.section_id,
+                p.id,
+                p.product_name,
+                p.section_id,
                 s.name as section_name,
                 p.mg,
                 p.mrp_per_sheet,
@@ -57,27 +57,25 @@ exports.getAvailableProducts = async (req, res) => {
                 p.mfg_date,
                 p.exp_date,
                 p.batch_number,
-                COALESCE(p.stock_quantity, 0) as stock_quantity,
+                p.stock_quantity,
                 CASE 
-                    WHEN p.id IS NULL THEN 'not_available'
                     WHEN p.stock_quantity = 0 THEN 'out_of_stock'
                     WHEN p.exp_date < CURRENT_DATE THEN 'expired'
                     WHEN p.exp_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'expiring_soon'
                     ELSE 'available'
                 END as availability_status
-            FROM product_master pm
-            JOIN sections s ON pm.section_id = s.id
-            LEFT JOIN products p ON LOWER(TRIM(pm.product_name)) = LOWER(TRIM(p.product_name)) AND pm.section_id = p.section_id
+            FROM products p
+            JOIN sections s ON p.section_id = s.id
             WHERE 1=1
         `;
         const params = [];
         
         if (section_id) {
-            query += ' AND pm.section_id = $' + (params.length + 1);
+            query += ' AND p.section_id = $' + (params.length + 1);
             params.push(section_id);
         }
         
-        query += ' ORDER BY pm.product_name';
+        query += ' ORDER BY p.product_name';
         
         const [products] = await db.query(query, params);
         res.json({ success: true, data: products });
