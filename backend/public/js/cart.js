@@ -73,7 +73,7 @@ function calculateCartTotals() {
     const cart = getCart();
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
-    return axios.get('/admin/gst')
+    return axios.get('/gst')
         .then(response => {
             const { sgst_percentage, cgst_percentage } = response.data.data;
             const sgst = (subtotal * sgst_percentage) / 100;

@@ -13,6 +13,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+
+// Public GST endpoint (needed for order calculations)
+app.get('/api/gst', require('./controllers/adminController').getGST);
+
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/workers', require('./routes/workerRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
