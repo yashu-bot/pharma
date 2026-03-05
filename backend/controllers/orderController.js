@@ -11,8 +11,17 @@ exports.placeOrder = async (req, res) => {
         const order_type = req.user.role;
         const worker_id = req.user.role === 'worker' ? req.user.id : null;
         
+        console.log('Place order request:', { items, user_id, order_type, worker_id });
+        
         // Get GST settings
         const [gstSettings] = await connection.query('SELECT sgst_percentage, cgst_percentage FROM admin LIMIT 1');
+        console.log('GST settings:', gstSettings);
+        
+        if (!gstSettings || gstSettings.length === 0) {
+            await connection.rollback();
+            return res.status(400).json({ success: false, message: 'GST settings not configured' });
+        }
+        
         const { sgst_percentage, cgst_percentage } = gstSettings[0];
         
         // Validate stock and calculate totals
@@ -20,6 +29,7 @@ exports.placeOrder = async (req, res) => {
         const validatedItems = [];
         
         for (const item of items) {
+            console.log('Processing item:', item);
             const [products] = await connection.query('SELECT * FROM products WHERE id = ? FOR UPDATE', [item.product_id]);
             
             if (products.length === 0) {
@@ -28,6 +38,7 @@ exports.placeOrder = async (req, res) => {
             }
             
             const product = products[0];
+            console.log('Product found:', product);
             
             // Check expiry
             if (new Date(product.exp_date) < new Date()) {
@@ -41,23 +52,20 @@ exports.placeOrder = async (req, res) => {
             let stockDeducted = item.quantity;
             
             if (product.scheme && product.scheme > 0) {
-                // Calculate how many free items customer gets
-                // Example: scheme = 4, quantity = 8 -> freeQuantity = 2 (8/4 = 2)
                 freeQuantity = Math.floor(item.quantity / product.scheme);
                 totalQuantity = item.quantity + freeQuantity;
-                stockDeducted = totalQuantity; // Deduct total including free items
+                stockDeducted = totalQuantity;
             }
             
-            // Check stock (must have enough for paid + free items)
+            // Check stock
             if (product.stock_quantity < stockDeducted) {
                 await connection.rollback();
                 return res.status(400).json({ 
                     success: false, 
-                    message: `Insufficient stock for ${product.product_name}. Available: ${product.stock_quantity}, Required: ${stockDeducted} (${item.quantity} + ${freeQuantity} free)` 
+                    message: `Insufficient stock for ${product.product_name}. Available: ${product.stock_quantity}, Required: ${stockDeducted}` 
                 });
             }
             
-            // Calculate price (only for paid quantity, not free items)
             const itemTotal = product.selling_price * item.quantity;
             subtotal += itemTotal;
             
@@ -80,18 +88,38 @@ exports.placeOrder = async (req, res) => {
             });
         }
         
+        console.log('Validated items:', validatedItems);
+        
         // Calculate GST
         const sgst_amount = (subtotal * sgst_percentage) / 100;
         const cgst_amount = (subtotal * cgst_percentage) / 100;
         const grand_total = subtotal + sgst_amount + cgst_amount;
         
+        console.log('Order totals:', { subtotal, sgst_amount, cgst_amount, grand_total });
+        
         // Insert order
+        let order_id;
         const [orderResult] = await connection.query(
-            'INSERT INTO orders (user_id, worker_id, order_type, subtotal, sgst_amount, cgst_amount, sgst_percentage, cgst_percentage, grand_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id',
+            'INSERT INTO orders (user_id, worker_id, order_type, subtotal, sgst_amount, cgst_amount, sgst_percentage, cgst_percentage, grand_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [user_id, worker_id, order_type, subtotal, sgst_amount, cgst_amount, sgst_percentage, cgst_percentage, grand_total]
         );
         
-        const order_id = orderResult[0].id;
+        console.log('Order insert result:', orderResult);
+        
+        // Get the inserted order ID
+        if (orderResult.id) {
+            order_id = orderResult.id;
+        } else if (orderResult.insertId) {
+            order_id = orderResult.insertId;
+        } else {
+            const [lastOrder] = await connection.query(
+                'SELECT id FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 1',
+                [user_id]
+            );
+            order_id = lastOrder[0].id;
+        }
+        
+        console.log('Order ID:', order_id);
         
         // Insert order items and update stock
         for (const item of validatedItems) {
@@ -105,6 +133,8 @@ exports.placeOrder = async (req, res) => {
         
         await connection.commit();
         
+        console.log('Order placed successfully:', order_id);
+        
         res.json({ 
             success: true, 
             message: 'Order placed successfully', 
@@ -117,6 +147,7 @@ exports.placeOrder = async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Place order error:', error);
         await connection.rollback();
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     } finally {
