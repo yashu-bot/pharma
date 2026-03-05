@@ -40,72 +40,32 @@ exports.getAllProducts = async (req, res) => {
     }
 };
 
-// Get Products for User/Worker (Show all products with availability status)
+// Get Products for User/Worker (Hide Expired)
 exports.getAvailableProducts = async (req, res) => {
     try {
         const { section_id } = req.query;
-        
-        // Get all products from stock (products table) - these are available
-        let stockQuery = `
-            SELECT 
-                p.id,
-                p.product_name,
-                p.section_id,
-                s.name as section_name,
-                p.mg,
-                p.mrp_per_sheet,
-                p.selling_price,
-                p.scheme,
-                p.stock_quantity,
-                p.exp_date,
-                CASE 
-                    WHEN p.exp_date < CURRENT_DATE THEN 'expired'
-                    WHEN p.stock_quantity <= 0 THEN 'out_of_stock'
-                    WHEN p.exp_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'expiring_soon'
-                    ELSE 'available'
-                END as availability_status
-            FROM products p
-            LEFT JOIN sections s ON p.section_id = s.id
-            WHERE 1=1
+        let query = `
+            SELECT p.*, s.name as section_name,
+            CASE 
+                WHEN p.exp_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'expiring_soon'
+                ELSE 'valid'
+            END as expiry_status
+            FROM products p 
+            JOIN sections s ON p.section_id = s.id
+            WHERE p.exp_date >= CURRENT_DATE AND p.stock_quantity > 0
         `;
-        
-        // Get products from product_master that are NOT in stock - these are not available
-        let masterQuery = `
-            SELECT 
-                pm.id,
-                pm.name as product_name,
-                pm.section_id,
-                s.name as section_name,
-                NULL as mg,
-                NULL as mrp_per_sheet,
-                NULL as selling_price,
-                NULL as scheme,
-                NULL as stock_quantity,
-                NULL as exp_date,
-                'not_available' as availability_status
-            FROM product_master pm
-            LEFT JOIN sections s ON pm.section_id = s.id
-            WHERE NOT EXISTS (
-                SELECT 1 FROM products p WHERE p.product_name = pm.name
-            )
-        `;
-        
         const params = [];
-        let paramIndex = 1;
         
         if (section_id) {
-            stockQuery += ' AND p.section_id = $' + paramIndex;
-            masterQuery += ' AND pm.section_id = $' + paramIndex;
+            query += ' AND p.section_id = $' + (params.length + 1);
             params.push(section_id);
         }
         
-        // Combine both queries with UNION ALL
-        const query = `(${stockQuery}) UNION ALL (${masterQuery}) ORDER BY product_name`;
+        query += ' ORDER BY p.product_name';
         
         const [products] = await db.query(query, params);
         res.json({ success: true, data: products });
     } catch (error) {
-        console.error('Get available products error:', error);
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };
