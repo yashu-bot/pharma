@@ -5,7 +5,15 @@ const validate = require('../middleware/validator');
 const auth = require('../middleware/auth');
 const adminController = require('../controllers/adminController');
 
-// All routes require admin authentication
+// GST Settings - GET is public (needed for order calculations), PUT requires admin
+router.get('/gst', adminController.getGST);
+router.put('/gst', auth(['admin']), [
+    body('sgst_percentage').isFloat({ min: 0, max: 100 }).withMessage('Valid SGST percentage is required'),
+    body('cgst_percentage').isFloat({ min: 0, max: 100 }).withMessage('Valid CGST percentage is required'),
+    validate
+], adminController.updateGST);
+
+// All other routes require admin authentication
 router.use(auth(['admin']));
 
 // Profile
@@ -22,14 +30,6 @@ router.post('/change-password', [
     body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters'),
     validate
 ], adminController.changePassword);
-
-// GST Settings
-router.get('/gst', adminController.getGST);
-router.put('/gst', [
-    body('sgst_percentage').isFloat({ min: 0, max: 100 }).withMessage('Valid SGST percentage is required'),
-    body('cgst_percentage').isFloat({ min: 0, max: 100 }).withMessage('Valid CGST percentage is required'),
-    validate
-], adminController.updateGST);
 
 // Dashboard
 router.get('/dashboard', adminController.getDashboard);
