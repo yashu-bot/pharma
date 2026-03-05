@@ -46,11 +46,10 @@ exports.getAvailableProducts = async (req, res) => {
         const { section_id } = req.query;
         let query = `
             SELECT 
-                pm.id as master_id,
+                COALESCE(p.id, pm.id) as id,
                 pm.product_name,
                 pm.section_id,
                 s.name as section_name,
-                p.id,
                 p.mg,
                 p.mrp_per_sheet,
                 p.selling_price,
@@ -58,7 +57,7 @@ exports.getAvailableProducts = async (req, res) => {
                 p.mfg_date,
                 p.exp_date,
                 p.batch_number,
-                p.stock_quantity,
+                COALESCE(p.stock_quantity, 0) as stock_quantity,
                 CASE 
                     WHEN p.id IS NULL THEN 'not_available'
                     WHEN p.stock_quantity = 0 THEN 'out_of_stock'
@@ -68,7 +67,7 @@ exports.getAvailableProducts = async (req, res) => {
                 END as availability_status
             FROM product_master pm
             JOIN sections s ON pm.section_id = s.id
-            LEFT JOIN products p ON pm.product_name = p.product_name AND pm.section_id = p.section_id
+            LEFT JOIN products p ON LOWER(TRIM(pm.product_name)) = LOWER(TRIM(p.product_name)) AND pm.section_id = p.section_id
             WHERE 1=1
         `;
         const params = [];
